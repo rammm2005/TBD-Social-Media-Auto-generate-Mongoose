@@ -54,3 +54,88 @@ db.posts.aggregate([
     { $match: { author_id: "60d9f9e9b7c9f1e1b8a5b805" } },  
     { $group: { _id: "$author_id", total_posts: { $sum: 1 } } } 
 ])
+
+mencari semua detail dari postingan yang dibuat oleh seorang pengguna
+db.posts.aggregate([
+    { $match: { author_id: "f9e18268f629098df7619fd3" } },
+    { $group: { 
+        _id: "$author_id", 
+        total_posts: { $sum: 1 },
+        posts: { $push: {
+            post_id: "$post_id",
+            content: "$content",
+            created_at: "$created_at",
+            comments: "$comments",
+            likes: "$likes"
+        }}
+    }}
+])
+
+
+mencari jumlah postingan yang dibuat oleh pengguna
+db.posts.aggregate([
+  { $match: { author_id: "a5ade3a22babb5b73f424c2f" } },  
+  { $group: {
+      _id: "$author_id",  
+      total_posts: { $sum: 1 }  
+  }}
+])
+
+
+mencari pesan yang dikirim atau diterima oleh pengguna dengan sender id 
+db.users.aggregate([
+  { $match: { "_id": ObjectId("667e6d2e103ca8132f018a90") } }, 
+  { $unwind: "$messages" },  
+  { $match: { "messages.sender_id": "a5ade3a22babb5b73f424c2f" } }, 
+  { $project: {
+      _id: 0,
+      message: "$messages.message",
+      sender_id: "$messages.sender_id",
+      receiver_id: "$messages.receiver_id",
+      created_at: "$messages.created_at"
+  }}
+])
+
+mencari pesan-pesan yang dikirim atau diterima oleh pengguna 
+db.users.aggregate([
+  { $match: { "_id": ObjectId("667e6d2e103ca8132f018a90") } },  
+  { $unwind: "$messages" }, 
+  { $project: {
+      _id: 0,
+      message: "$messages.message",
+      sender_id: "$messages.sender_id",
+      receiver_id: "$messages.receiver_id",
+      created_at: "$messages.created_at"
+  }}
+])
+
+mencari semua postingan yang dimiliki oleh pengguna
+db.posts.find({ author_id: "a5ade3a22babb5b73f424c2f" })
+
+menampilkan semua postingan yang dimiliki oleh pengguna dengan author_id "a5ade3a22babb5b73f424c2f" (Amy) beserta total jumlah postingannya
+db.posts.aggregate([
+    { $match: { author_id: "a5ade3a22babb5b73f424c2f" } },
+    { $group: {
+        _id: "$author_id",
+        total_posts: { $sum: 1 },
+        posts: { $push: {
+            post_id: "$_id",
+            content: "$content",
+            created_at: "$created_at",
+            comments: "$comments",
+            likes: "$likes"
+        }}
+    }},
+    { $project: {
+        _id: 0,
+        user_id: "$_id",
+        name: "Amy",
+        total_posts: 1,
+        posts: 1
+    }}
+])
+
+
+
+
+
