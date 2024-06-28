@@ -1,0 +1,20 @@
+Eazy ni
+db.posts.find()
+
+db.posts.find({ "post_id": "60d9fa31b7c9f1e1b8a5b7f8" })
+
+db.posts.insertOne({
+    "post_id": "60d9fa44b7c9f1e1b8a5b805",
+    "author_id": "60d9f9e9b7c9f1e1b8a5b805",
+    "content": "Exciting news! Launching a new project.",
+    "created_at": "2024-06-20T12:00:00Z",
+    "comments": [],
+    "likes": []
+})
+
+db.posts.updateOne(
+    { "post_id": "60d9fa44b7c9f1e1b8a5b805" },
+    { $set: { "content": "Updated content!" } }
+)
+
+db.posts.deleteOne({ "post_id": "60d9fa44b7c9f1e1b8a5b805" })

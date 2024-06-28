@@ -1,0 +1,56 @@
+Operasi Aggregation:
+
+Aggregation Pipeline untuk Menghitung Jumlah Dokumen:
+db.posts.aggregate([
+    { $group: { _id: null, count: { $sum: 1 } } }
+])
+
+Aggregation untuk Menghitung Rata-rata Jumlah Komentar per Postingan:
+db.posts.aggregate([
+    { $project: { num_comments: { $size: "$comments" } } },
+    { $group: { _id: null, avg_comments: { $avg: "$num_comments" } } }
+])
+
+Aggregation untuk Mengelompokkan dan Menghitung Jumlah Komentar per Pengguna:
+db.posts.aggregate([
+    { $unwind: "$comments" },
+    { $group: { _id: "$comments.author_id", total_comments: { $sum: 1 } } }
+])
+
+Indexing:
+
+Membuat Index pada Koleksi posts untuk author_id:
+db.posts.createIndex({ "author_id": 1 })
+
+Membuat Index Compound pada Koleksi posts untuk author_id dan created_at:
+db.posts.createIndex({ "author_id": 1, "created_at": -1 })
+
+Melihat Semua Index yang Ada pada Koleksi posts:
+db.posts.getIndexes()
+
+Query yang Lebih Kompleks:
+Query dengan Filter Tanggal (Mengambil Postingan Setelah Tanggal Tertentu):
+db.posts.find({ "created_at": { $gt: ISODate("2024-06-15T00:00:00Z") } })
+
+Query dengan Proyeksi untuk Memilih Hanya Field Tertentu:
+db.users.find({ "name": "Oliver" }, { "name": 1, "joined_groups": 1 })
+
+
+Query dengan Aggregasi dan Sorting (Menampilkan Postingan dengan Jumlah Komentar Terbanyak):
+
+db.posts.aggregate([
+    { $project: { num_comments: { $size: "$comments" } } },
+    { $sort: { num_comments: -1 } },
+    { $limit: 10 }
+])
+
+Query dengan Text Search (Mencari Postingan yang Mengandung Kata Tertentu):
+
+db.posts.find({ $text: { $search: "AI-driven healthcare" } })
+
+
+Banyak postingan dengan user tententu :
+db.posts.aggregate([
+    { $match: { author_id: "60d9f9e9b7c9f1e1b8a5b805" } },  
+    { $group: { _id: "$author_id", total_posts: { $sum: 1 } } } 
+])

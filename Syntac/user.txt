@@ -1,0 +1,28 @@
+
+Eazy ini
+db.users.find()
+
+db.users.find({ "user_id": "60d9f9e9b7c9f1e1b8a5b805" })
+
+db.users.insertOne({
+    "user_id": "60d9f9e9b7c9f1e1b8a5b806",
+    "name": "Alice",
+    "joined_groups": [
+        {
+            "name": "Photography Lovers",
+            "description": "A group for people who love photography."
+        }
+    ],
+    "messages": [],
+    "notifications": []
+})
+
+
+db.users.updateOne(
+    { "user_id": "60d9f9e9b7c9f1e1b8a5b805" },
+    { $set: { "name": "Oliver Smith" } }
+)
+
+
+db.users.deleteOne({ "user_id": "60d9f9e9b7c9f1e1b8a5b806" })
+
