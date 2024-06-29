@@ -18,7 +18,7 @@ user_ids = [user["user_id"] for user in users_collection.find({}, {"_id": 0, "us
 records = []
 base_created_at = datetime.strptime("2024-06-10T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
 
-for i in range(300):
+for i in range(400):
     post_id = generate_object_id()
     author_id = random.choice(user_ids)  
     content = fake.sentence()  
@@ -54,4 +54,4 @@ for i in range(300):
 
 posts_collection.insert_many(records)
 
-print("Records inserted successfully.")
+print("400 Records inserted to `posts` successfully.")

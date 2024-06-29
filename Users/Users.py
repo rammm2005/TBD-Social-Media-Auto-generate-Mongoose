@@ -14,7 +14,7 @@ def generate_object_id():
 
 users = []
 user_ids = [] 
-for _ in range(300):
+for _ in range(400):
     user_id = generate_object_id()
     user_ids.append(user_id)  
     joined_groups = [
@@ -48,14 +48,24 @@ for _ in range(300):
             "created_at": fake.date_time_this_year().isoformat() + "Z"
         }
     ]
+    
+    followers = [
+        {
+            "follower_id": random.choice(user_ids),
+            "followed_at": fake.date_time_this_year().isoformat() + "Z"
+        }
+        for _ in range(random.randint(0, 10))
+    ]
+    
     user = {
         "user_id": user_id,
         "name": fake.first_name(),
         "joined_groups": joined_groups,
         "messages": messages,
-        "notifications": notifications
+        "notifications": notifications,
+        "followers": followers
     }
     users.append(user)
 
 users_collection.insert_many(users)
-print("100 user documents inserted into the 'users' collection.")
+print("400 user documents inserted into the 'users' collection.")

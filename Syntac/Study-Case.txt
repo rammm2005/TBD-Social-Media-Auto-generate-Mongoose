@@ -1,0 +1,187 @@
+Menghitung Total Jumlah Pengikut (Followers) dari Seorang Pengguna
+db.users.aggregate([
+    { $match: { user_id: "specific_user_id" } },
+    { $project: { total_followers: { $size: "$followers" } } }
+])
+
+1. Mencari follower yang follow pada waktu tertentu (hanya satu hasil)
+Untuk menemukan follower yang follow pada waktu tertentu, kita bisa menggunakan query aggregate dengan filter pada waktu tertentu dan limit hasilnya hanya satu.
+db.users.aggregate([
+  { $match: { user_id: "56f5c61ba1834eab8698bd28" } }, // Sesuaikan user_id yang dicari di sini
+  { $unwind: "$followers" },
+  { 
+    $match: { 
+      "followers.followed_at": { 
+        $gte: ISODate("2024-02-04T00:00:00Z"), // Ganti dengan tanggal awal yang sesuai
+        $lte: ISODate("2024-02-04T23:59:59Z")  // Ganti dengan tanggal akhir yang sesuai
+      } 
+    } 
+  },
+  { $sort: { "followers.followed_at": -1 } },
+  { 
+    $lookup: {
+      from: "users",
+      localField: "followers.follower_id",
+      foreignField: "user_id",
+      as: "follower_info"
+    }
+  },
+  { 
+    $project: {
+      _id: 0,
+      user_id: 1,
+      follower_id: "$followers.follower_id",
+      follower_name: { $arrayElemAt: ["$follower_info.name", 0] }
+    }
+  }
+])
+
+
+2. Mengurutkan follower berdasarkan waktu follow dalam urutan descending dan menampilkan semua follower
+Untuk mengurutkan follower berdasarkan waktu follow dalam urutan descending dan menampilkan semua follower, kita gunakan query aggregate yang diurutkan berdasarkan waktu follow.
+db.users.aggregate([
+  { $match: { user_id: "56f5c61ba1834eab8698bd28" } },
+  { $unwind: "$followers" },
+  { 
+    $lookup: {
+      from: "users",
+      localField: "followers.follower_id",
+      foreignField: "user_id",
+      as: "follower_info"
+    }
+  },
+  { $sort: { "followers.followed_at": -1 } },
+  { $group: {
+      _id: "$user_id",
+      total_followers: { $sum: 1 },
+      followers: { $push: { 
+          follower_id: "$followers.follower_id",
+          follower_name: { $arrayElemAt: ["$follower_info.name", 0] },
+          followed_at: "$followers.followed_at"
+        } 
+      }
+    }
+  }
+])
+
+
+Menemukan Postingan Terbaru dari Pengguna yang Diikuti
+db.posts.aggregate([
+    { $match: { author_id: { $in: ["list_of_followed_user_ids"] } } },
+    { $sort: { created_at: -1 } },
+    { $limit: 10 }
+])
+
+Menghitung berapa banyak like yang didapatkan oleh setiap postingan.
+db.posts.aggregate([
+    { $project: { post_id: 1, total_likes: { $size: "$likes" } } }
+])
+
+
+Menemukan Pengguna yang Paling Aktif (Berdasarkan Jumlah Postingan)
+db.posts.aggregate([
+    { $group: { _id: "$author_id", post_count: { $sum: 1 } } },
+    { $sort: { post_count: -1 } },
+    { $limit: 10 }
+])
+
+
+Menemukan Postingan yang Mendapatkan Paling Banyak Komentar
+db.posts.aggregate([
+    { $project: { post_id: 1, total_comments: { $size: "$comments" } } },
+    { $sort: { total_comments: -1 } },
+    { $limit: 10 }
+])
+
+
+7. Menghitung Rata-rata Jumlah Like per Postingan dari Seorang Pengguna
+db.posts.aggregate([
+    { $match: { author_id: "specific_user_id" } },
+    { $group: { _id: "$author_id", avg_likes: { $avg: { $size: "$likes" } } } }
+])
+
+
+8. Menemukan Komentar Terbaru pada Postingan Tertentu
+db.posts.aggregate([
+    { $match: { post_id: "specific_post_id" } },
+    { $unwind: "$comments" },
+    { $sort: { "comments.created_at": -1 } },
+    { $limit: 10 },
+    { $project: { comment: "$comments", _id: 0 } }
+])
+
+
+9. Menemukan Postingan yang Diposting dalam Rentang Waktu Tertentu
+db.posts.find({ 
+    created_at: { 
+        $gte: ISODate("2024-06-01T00:00:00Z"), 
+        $lte: ISODate("2024-06-30T23:59:59Z") 
+    }
+})
+
+
+10. Menemukan Pengguna dengan Interaksi Terbanyak (Like dan Komentar)
+db.posts.aggregate([
+    { $unwind: "$likes" },
+    { $group: { _id: "$likes", interaction_count: { $sum: 1 } } },
+    { $sort: { interaction_count: -1 } },
+    { $limit: 10 }
+])
+
+// Untuk komentar
+db.posts.aggregate([
+    { $unwind: "$comments" },
+    { $group: { _id: "$comments.author_id", interaction_count: { $sum: 1 } } },
+    { $sort: { interaction_count: -1 } },
+    { $limit: 10 }
+])
+
+
+Studi Kasus Rumit
+1. Menemukan Pengguna yang Paling Berpengaruh (Berdasarkan Jumlah Like dan Komentar pada Postingan Mereka)
+db.posts.aggregate([
+    { $group: { 
+        _id: "$author_id", 
+        total_likes: { $sum: { $size: "$likes" } },
+        total_comments: { $sum: { $size: "$comments" } }
+    }},
+    { $project: { 
+        total_interactions: { $add: ["$total_likes", "$total_comments"] }
+    }},
+    { $sort: { total_interactions: -1 } },
+    { $limit: 10 }
+])
+
+
+2. Menghitung Engagement Rate dari Setiap Postingan
+Deskripsi: Menghitung engagement rate (like + komentar) dari setiap postingan dan mengurutkan dari yang tertinggi.
+db.posts.aggregate([
+    { $project: { 
+        post_id: 1, 
+        engagement_rate: { 
+            $add: [ { $size: "$likes" }, { $size: "$comments" } ] 
+        }
+    }},
+    { $sort: { engagement_rate: -1 } }
+])
+
+
+3. Menemukan Pengguna yang Sering Berinteraksi dengan Postingan Tertentu
+Deskripsi: Menemukan pengguna yang paling sering memberikan like atau komentar pada postingan tertentu.
+
+db.posts.aggregate([
+    { $match: { post_id: "specific_post_id" } },
+    { $project: { 
+        interactions: { 
+            $concatArrays: ["$likes", { $map: { input: "$comments", as: "c", in: "$$c.author_id" } }] 
+        }
+    }},
+    { $unwind: "$interactions" },
+    { $group: { _id: "$interactions", interaction_count: { $sum: 1 } } },
+    { $sort: { interaction_count: -1 } },
+    { $limit: 10 }
+])
+
+
+
+

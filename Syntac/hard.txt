@@ -136,6 +136,61 @@ db.posts.aggregate([
 ])
 
 
+3. Menampilkan Semua Notifikasi yang Belum Dibaca oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $unwind: "$notifications" },
+    { $match: { "notifications.read": false } },
+    { $project: { _id: 0, type: "$notifications.type", details: "$notifications.details", created_at: "$notifications.created_at" } }
+])
+
+4. Menampilkan Semua Grup yang Diikuti oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $project: { _id: 0, joined_groups: 1 } }
+])
+
+5. Menghitung Jumlah Grup yang Diikuti oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $project: { total_joined_groups: { $size: "$joined_groups" } } }
+])
+
+6. Menampilkan Semua Pesan yang Diterima oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $unwind: "$messages" },
+    { $match: { "messages.receiver_id": "25500d681680c6d2ba304cab" } },
+    { $project: { _id: 0, message: "$messages.message", created_at: "$messages.created_at" } }
+])
+
+7. Menghitung Jumlah Pesan yang Diterima oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $unwind: "$messages" },
+    { $match: { "messages.receiver_id": "25500d681680c6d2ba304cab" } },
+    { $group: { _id: "$user_id", total_received_messages: { $sum: 1 } } }
+])
+
+8. Menampilkan Semua Pesan (Dikirim dan Diterima) oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $unwind: "$messages" },
+    { $match: { $or: [{ "messages.sender_id": "25500d681680c6d2ba304cab" }, { "messages.receiver_id": "25500d681680c6d2ba304cab" }] } },
+    { $project: { _id: 0, message: "$messages.message", created_at: "$messages.created_at" } }
+])
+
+9. Menghitung Total Pesan (Dikirim dan Diterima) oleh Pengguna Tertentu
+db.users.aggregate([
+    { $match: { user_id: "25500d681680c6d2ba304cab" } },
+    { $unwind: "$messages" },
+    { $match: { $or: [{ "messages.sender_id": "25500d681680c6d2ba304cab" }, { "messages.receiver_id": "25500d681680c6d2ba304cab" }] } },
+    { $group: { _id: "$user_id", total_messages: { $sum: 1 } } }
+])
+
+
+
+
 
 
 
