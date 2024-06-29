@@ -7,13 +7,13 @@ db.users.aggregate([
 1. Mencari follower yang follow pada waktu tertentu (hanya satu hasil)
 Untuk menemukan follower yang follow pada waktu tertentu, kita bisa menggunakan query aggregate dengan filter pada waktu tertentu dan limit hasilnya hanya satu.
 db.users.aggregate([
-  { $match: { user_id: "56f5c61ba1834eab8698bd28" } }, // Sesuaikan user_id yang dicari di sini
+  { $match: { user_id: "2649ef441c25c812e25fbaa4" } },
   { $unwind: "$followers" },
   { 
     $match: { 
       "followers.followed_at": { 
-        $gte: ISODate("2024-02-04T00:00:00Z"), // Ganti dengan tanggal awal yang sesuai
-        $lte: ISODate("2024-02-04T23:59:59Z")  // Ganti dengan tanggal akhir yang sesuai
+        $gte: "2024-02-21T00:00:00Z",
+        $lte: "2024-05-18T23:59:59Z"  
       } 
     } 
   },
@@ -31,6 +31,7 @@ db.users.aggregate([
       _id: 0,
       user_id: 1,
       follower_id: "$followers.follower_id",
+      followed_at: "$followers.followed_at",
       follower_name: { $arrayElemAt: ["$follower_info.name", 0] }
     }
   }
